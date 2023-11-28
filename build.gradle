@@ -14,6 +14,11 @@ dependencies {
     implementation ('com.squareup.okhttp3:okhttp:4.10.0')
     implementation ('com.mastercard.developer:oauth1-signer:1.5.2')
     implementation ('com.mastercard.developer:client-encryption:1.7.10')
+    implementation ('com.google.code.gson:gson:2.8.8')
+    implementation 'org.slf4j:slf4j-api:1.7.32'  // Versión actualizada
+    implementation 'ch.qos.logback:logback-classic:1.2.5'  // Versión actualizada
+
+    implementation ('io.gsonfire:gson-fire:1.8.3')
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
