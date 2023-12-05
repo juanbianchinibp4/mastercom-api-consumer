@@ -1,37 +1,47 @@
-package com.fiserv;
+package com.fiserv.service;
 
 import bp4.mastercom_api_client.ApiClient;
 import bp4.mastercom_api_client.ApiException;
 import bp4.mastercom_api_client.api.TransactionsApi;
-import bp4.mastercom_api_client.model.AuthorizationSummary;
 import bp4.mastercom_api_client.model.TransactionSearchRequest;
 import bp4.mastercom_api_client.model.TransactionSummary;
+import com.fiserv.dto.TransactionSearchDTO;
 import com.mastercard.developer.encryption.EncryptionException;
 import com.mastercard.developer.interceptors.OkHttpOAuth1Interceptor;
 import com.mastercard.developer.utils.AuthenticationUtils;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.util.List;
 
 @Service
 public class TransactionService {
+    @Value("${api.url}")
+    private String apiUrl;
+    @Value("${api.consumer_key}")
+    private String consumerKey;
+    @Value("${pk12file}")
+    private String pk12file;
+    @Value("${api.key_alias}")
+    private String keyAlias;
+    @Value("${api.key_store_password}")
+    private String keyStorePassword;
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionService.class.getName());
 
-    public List<AuthorizationSummary> executeTransactionSearch(TransactionSearch transactionSearch) {
+    public TransactionSummary executeTransactionSearch(TransactionSearchDTO transactionSearchDTO) {
         try {
             ApiClient client = createApiClient();
             TransactionsApi api = new TransactionsApi(client);
-            TransactionSearchRequest searchRequest = createTransactionSearchRequest(transactionSearch);
+            TransactionSearchRequest searchRequest = createTransactionSearchRequest(transactionSearchDTO);
             TransactionSummary searchResponse = api.transactionSearch(searchRequest);
-            logger.info("logger" + searchResponse.getAuthorizationSummary().toString());
-            return searchResponse.getAuthorizationSummary();
+
+            return searchResponse;
         } catch (IOException | GeneralSecurityException | EncryptionException | ApiException e) {
             logger.error("An error occurred: " + e.getMessage());
         }
@@ -43,10 +53,10 @@ public class TransactionService {
         ApiClient client = new ApiClient();
         OkHttpClient okHttpClient = client.getHttpClient();
         OkHttpClient.Builder httpClientBuilder = okHttpClient.newBuilder();
-        client.setBasePath("https://sandbox.api.mastercard.com/mastercom");
+        client.setBasePath(apiUrl);
         PrivateKey signingKey = loadSigningKey();
         httpClientBuilder.addInterceptor(new OkHttpOAuth1Interceptor(
-                "tOtuKPlv5pUb0d-iNWZf0m7zxTZd6f_mcGKNHg-P2b774e70!f1e33cbc653249b397e7b65476f8710c0000000000000000",
+                consumerKey,
                 signingKey));
         client.setHttpClient(httpClientBuilder.build());
         return client;
@@ -54,17 +64,17 @@ public class TransactionService {
 
     private PrivateKey loadSigningKey() throws GeneralSecurityException, IOException {
         try {
-            return AuthenticationUtils.loadSigningKey("src/main/resources/Mastercom_test_client-sandbox.p12",
-                    "keyalias", "keystorepassword");
+            return AuthenticationUtils.loadSigningKey(
+                    pk12file, keyAlias, keyStorePassword);
         } catch (IOException | KeyStoreException | CertificateException | NoSuchAlgorithmException |
                  UnrecoverableKeyException e) {
             throw new GeneralSecurityException("Failed to load signing key", e);
         }
     }
 
-    private TransactionSearchRequest createTransactionSearchRequest(TransactionSearch transactionSearch) {
-        return new TransactionSearchRequest().acquirerRefNumber(transactionSearch.getAcquirerRefNumber())
-                .tranStartDate(transactionSearch.getTranStartDate()).tranEndDate(transactionSearch.getTranEndDate());
+    private TransactionSearchRequest createTransactionSearchRequest(TransactionSearchDTO transactionSearchDTO) {
+        return new TransactionSearchRequest().acquirerRefNumber(transactionSearchDTO.getAcquirerRefNumber())
+                .tranStartDate(transactionSearchDTO.getTranStartDate()).tranEndDate(transactionSearchDTO.getTranEndDate());
 
     }
 }

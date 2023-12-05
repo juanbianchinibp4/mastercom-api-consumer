@@ -1,4 +1,4 @@
-package com.fiserv;
+package com.fiserv.config;
 
 import org.springframework.context.annotation.Configuration;
 

@@ -1,5 +1,8 @@
-package com.fiserv;
+package com.fiserv.api;
 
+import bp4.mastercom_api_client.model.TransactionSummary;
+import com.fiserv.dto.TransactionSearchDTO;
+import com.fiserv.service.TransactionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,9 +19,9 @@ public class TransactionController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<String> executeTransactionSearch(@RequestBody TransactionSearch transactionSearch) {
+    public ResponseEntity<String> executeTransactionSearch(@RequestBody TransactionSearchDTO transactionSearchDTO) {
 
-        Object search = transactionService.executeTransactionSearch(transactionSearch);
+        TransactionSummary search = transactionService.executeTransactionSearch(transactionSearchDTO);
 
         return ResponseEntity.ok(search.toString());
 
